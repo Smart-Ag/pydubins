@@ -55,6 +55,15 @@ class DubinsCurvesTests(unittest.TestCase):
         b = dubins.path_length((0,0,0), (10,10,math.pi/4.0), 2.0)
         self.assert_(b > a)
 
+    def test_path_length_segs(self):
+        q0 = (10, 0, 0)
+        q1 = (12, 0, 0)
+        rho = 0.5
+        path = dubins.DubinsPath(q0, q1, rho)
+        self.assertEqual(path.path_length(), 2.0)
+        self.assertEqual(path.path_type(), dubins.LSL)
+        self.assertEqual(path.path_length_segs(), (0.0, 2.0, 0.0))
 
 
-
+if __name__ == "__main__":
+    unittest.main()

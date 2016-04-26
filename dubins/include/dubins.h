@@ -83,6 +83,14 @@ int dubins_init( double q0[3], double q1[3], double rho, DubinsPath* path);
 double dubins_path_length( DubinsPath* path );
 
 /**
+ * Calculate the length of an initialised path's segment
+ *
+ * @param path - the path to find the length of
+ * @param index - which segment to get the length of
+ */
+double dubins_path_length_seg( DubinsPath* path, int index );
+
+/**
  * Extract an integer that represents which path type was used
  *
  * @param path    - an initialised path

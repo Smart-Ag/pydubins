@@ -81,6 +81,14 @@ cdef class DubinsPath:
     def path_length(self):
         return core.dubins_path_length(self.ppth)
 
+    def path_length_segs(self):
+        """Return the length of each segment. Returns a tuple of 3 doubles."""
+        return (
+            core.dubins_path_length_seg(self.ppth, 0),
+            core.dubins_path_length_seg(self.ppth, 1),
+            core.dubins_path_length_seg(self.ppth, 2),
+            )
+
     def path_type(self):
         return core.dubins_path_type(self.ppth)
 

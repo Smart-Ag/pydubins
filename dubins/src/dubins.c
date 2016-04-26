@@ -251,6 +251,11 @@ double dubins_path_length( DubinsPath* path )
     return length;
 }
 
+double dubins_path_length_seg( DubinsPath* path, int index )
+{
+    return path->param[index] * path->rho;
+}
+
 int dubins_path_type( DubinsPath* path ) {
     return path->type;
 }

@@ -146,8 +146,8 @@ def path_length(q0, q1, rho):
 
     Returns
     -------
-    float 
-        The length of the path 
+    float
+        The length of the path
     '''
     return DubinsPath(q0, q1, rho).path_length()
 
@@ -177,3 +177,25 @@ def path_sample(q0, q1, rho, step_size):
     '''
     return DubinsPath(q0, q1, rho).sample(step_size)
 
+def make_dubins(q0, q1, rho):
+    '''Creates a Dubin's path object that can be used for sampling
+
+    Parameters
+    ----------
+    q0 : array-like
+        the initial configuration
+    q1 : array-like
+        the final configuration
+    rho : float
+        the turning radius of the vehicle
+
+    Raises
+    ------
+    RuntimeError
+        If the construction of the path fails
+
+    Returns
+    -------
+    DubinsPath object
+    '''
+    return DubinsPath(q0, q1, rho)

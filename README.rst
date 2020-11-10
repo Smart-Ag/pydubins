@@ -11,7 +11,7 @@ The approach used to find paths is based on the algebraic solutions published in
 
 This code is primarily a Cython wrapper of https://github.com/AndrewWalker/Dubins-Curves
 
-|docs| |build_status|
+|docs| |build_status| |license|
 
 Installing
 ==========
@@ -31,7 +31,7 @@ Or, you can install the latest development version from `GitHub <https://github.
 Example
 =======
 
-Sampling of a Dubin's path at finite size sizes
+Discrete Sampling of a Dubin's path at finite step sizes
 
 .. code-block:: python
 
@@ -42,7 +42,9 @@ Sampling of a Dubin's path at finite size sizes
     turning_radius = 1.0
     step_size = 0.5
 
-    qs, _ = dubins.path_sample(q0, q1, turning_radius, step_size)
+    path = dubins.shortest_path(q0, q1, turning_radius)
+    configurations, _ = path.sample_many(step_size)
+
 
 Acknowledgements
 ================
@@ -69,3 +71,6 @@ References
    :target: http://dubins.readthedocs.org/en/latest/
    :alt: Latest documentation
 
+.. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
+   :target: http://opensource.org/licenses/MIT
+   :alt: license shield

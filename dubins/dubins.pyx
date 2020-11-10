@@ -37,7 +37,7 @@ LRL = 5
 
 
 # Extension point for pure python classes
-cdef class DubinsPath:
+cdef class _DubinsPath:
     cdef core.DubinsPath *ppth
 
     def __cinit__(self):
@@ -46,113 +46,95 @@ cdef class DubinsPath:
     def __dealloc__(self):
         free(self.ppth)
 
-    def __init__(self, q0, q1, rho):
-        '''Identify which type of path is produced between configurations
-
-        Parameters
-        ----------
-        q0 : array-like
-            the initial configuration
-        q1 : array-like
-            the final configuration
-        rho : float
-            the turning radius of the vehicle
-
-        Raises
-        ------
-        RuntimeError
-            If the construction of the path fails
-
-        Returns
-        -------
-        int
-            The path type
-        '''
+    @staticmethod
+    def shortest_path(q0, q1, rho):
         cdef double _q0[3]
         cdef double _q1[3]
         cdef double _rho = rho
         for i in [0, 1, 2]:
             _q0[i] = q0[i]
             _q1[i] = q1[i]
-        code = core.dubins_init(_q0, _q1, _rho, self.ppth)
+
+        path = _DubinsPath()
+        code = core.dubins_shortest_path(path.ppth, _q0, _q1, _rho)
         if code != 0:
             raise RuntimeError('path did not initialise correctly')
+        return path
+
+    @staticmethod
+    def path(q0, q1, rho, word):
+        cdef double _q0[3]
+        cdef double _q1[3]
+        cdef double _rho = rho
+        for i in [0, 1, 2]:
+            _q0[i] = q0[i]
+            _q1[i] = q1[i]
+        path = _DubinsPath()
+        code = core.dubins_path(path.ppth, _q0, _q1, _rho, word)
+        if code != 0:
+            return None
+        return path
+
+    def path_endpoint(self):
+        cdef double _q0[3]
+        code = core.dubins_path_endpoint(self.ppth, _q0)
+        if code != 0:
+            raise RuntimeError('endpoint not found')
+        return (_q0[0], _q0[1], _q0[2])
 
     def path_length(self):
+        '''Identify the total length of the path
+        '''
         return core.dubins_path_length(self.ppth)
 
-    def path_length_segs(self):
-        """Return the length of each segment. Returns a tuple of 3 doubles."""
-        return (
-            core.dubins_path_length_seg(self.ppth, 0),
-            core.dubins_path_length_seg(self.ppth, 1),
-            core.dubins_path_length_seg(self.ppth, 2),
-            )
+    def segment_length(self, i): 
+        '''Identify the length of the i-th segment within the path
+        '''
+        return core.dubins_segment_length(self.ppth, i)
+
+    def segment_length_normalized(self, i): 
+        '''Identify the normalized length of the i-th segment within the path
+        '''
+        return core.dubins_segment_length_normalized(self.ppth, i)
 
     def path_type(self):
+        '''Identify the type of path which applies 
+        '''
         return core.dubins_path_type(self.ppth)
 
-    def sample(self, step_size):
+    def sample(self, t):
+        '''Sample the path
+        '''
+        cdef double _q0[3]
+        code = core.dubins_path_sample(self.ppth, t, _q0)
+        if code != 0:
+            raise RuntimeError('sample not found')
+        return (_q0[0], _q0[1], _q0[2])
+
+    def sample_many(self, step_size):
+        '''Sample the entire path
+        '''
         qs = []
         ts = []
         def f(q, t):
             qs.append(q)
             ts.append(t)
             return 0
-        core.dubins_path_sample_many(self.ppth, callback, step_size, <void*>f)
+        core.dubins_path_sample_many(self.ppth, step_size, callback, <void*>f)
         return qs, ts
 
+    def extract_subpath(self, t):
+        '''Extract a subpath
+        '''
+        newpath = _DubinsPath()
+        code = core.dubins_extract_subpath(self.ppth, t, newpath.ppth)
+        if code != 0:
+            raise RuntimeError('invalid subpath')
+        return newpath
 
-def path_type(q0, q1, rho):
-    '''Identify which type of path is produced between configurations
-
-    Parameters
-    ----------
-    q0 : array-like
-        the initial configuration
-    q1 : array-like
-        the final configuration
-    rho : float
-        the turning radius of the vehicle
-
-    Raises
-    ------
-    RuntimeError
-        If the construction of the path fails
-
-    Returns
-    -------
-    int
-        The path type
-    '''
-    return DubinsPath(q0, q1, rho).path_type()
-
-def path_length(q0, q1, rho):
-    '''Return the total length of a Dubins path
-
-    Parameters
-    ----------
-    q0 : array-like
-        the initial configuration
-    q1 : array-like
-        the final configuration
-    rho : float
-        the turning radius of the vehicle
-
-    Raises
-    ------
-    RuntimeError
-        If the construction of the path fails
-
-    Returns
-    -------
-    float
-        The length of the path
-    '''
-    return DubinsPath(q0, q1, rho).path_length()
 
 def path_sample(q0, q1, rho, step_size):
-    '''Sample a Dubins' path at a fixed step interval
+    '''Generate points along a Dubin's path sampled at a regular interval 
 
     Parameters
     ----------
@@ -163,7 +145,7 @@ def path_sample(q0, q1, rho, step_size):
     rho : float
         the turning radius of the vehicle
     step_size : float
-        the parameter used to select sampling interval
+        the distance along the path to sample 
 
     Raises
     ------
@@ -172,10 +154,92 @@ def path_sample(q0, q1, rho, step_size):
 
     Returns
     -------
-    tuple
-        configurations and sampling parameter
+    result : tuple of two lists
+        The first element are sampled configurations, the second are distances
     '''
-    return DubinsPath(q0, q1, rho).sample(step_size)
+    path = _DubinsPath.shortest_path(q0, q1, rho) 
+    return path.sample_many(step_size)
+
+
+def shortest_path(q0, q1, rho):
+    '''Shortest path between dubins configurations
+
+    Parameters
+    ----------
+    q0 : array-like
+        the initial configuration
+    q1 : array-like
+        the final configuration
+    rho : float
+        the turning radius of the vehicle
+
+    Raises
+    ------
+    RuntimeError
+        If the construction of the path fails
+
+    Returns
+    -------
+    path : DubinsPath 
+        The shortest path
+    '''
+    return _DubinsPath.shortest_path(q0, q1, rho) 
+ 
+
+def path(q0, q1, rho, word):
+    '''Find the Dubin's path for one specific word
+
+    Parameters
+    ----------
+    q0 : array-like
+        the initial configuration
+    q1 : array-like
+        the final configuration
+    rho : float
+        the turning radius of the vehicle
+    word : int
+        the control word (LSL, LSR, ...)
+
+    Raises
+    ------
+    RuntimeError
+        If the construction of the path fails
+
+    Returns
+    -------
+    path : _DubinsPath 
+        The path with the specified word (if one exists) or None
+    '''
+    return _DubinsPath.path(q0, q1, rho, word) 
+
+def norm_path(alpha, beta, delta, word):
+    '''Find the Dubin's path for one specific word assuming a normalized (alpha, beta, delta) frame
+
+    Parameters
+    ----------
+    alpha : float
+        the initial orientation 
+    beta : flaot
+        the final orientation
+    delta : float
+        the distance between configurations
+    word : int
+        the control word (LSL, LSR, ...)
+
+    Raises
+    ------
+    RuntimeError
+        If the construction of the path fails
+
+    Returns
+    -------
+    path : DubinsPath 
+        The path with the specified word (if one exists) or None
+    '''
+    q0 = [ 0.0, 0.0, alpha ]
+    q1 = [ delta, 0.0, beta ]
+    return path(q0, q1, 1.0, word)
+
 
 def make_dubins(q0, q1, rho):
     '''Creates a Dubin's path object that can be used for sampling

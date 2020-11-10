@@ -3765,7 +3765,6 @@ static PyObject *__pyx_pf_6dubins_6norm_path(CYTHON_UNUSED PyObject *__pyx_self,
  *     return path(q0, q1, 1.0, word)             # <<<<<<<<<<<<<<
  * 
  * 
- * def make_dubins(q0, q1, rho):
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_2 = __Pyx_GetModuleGlobalName(__pyx_n_s_path); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 241, __pyx_L1_error)
@@ -7066,9 +7065,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyNumber_IntOrLong(PyObject* x) {
   if (!PyBytes_CheckExact(x) && !PyUnicode_CheckExact(x)) {
     res = PyNumber_Int(x);
   }
-  #endif
-#else
-  res = PyNumber_Int(x);
 #endif
   if (likely(res)) {
 #if PY_MAJOR_VERSION < 3

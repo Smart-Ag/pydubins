@@ -260,6 +260,6 @@ def make_dubins(q0, q1, rho):
 
     Returns
     -------
-    DubinsPath object
+    _DubinsPath object
     '''
-    return DubinsPath(q0, q1, rho)
+    return _DubinsPath(q0, q1, rho)
